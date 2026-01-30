@@ -1,0 +1,24 @@
+[project]
+name = "foundryiq-agent-framework-demo"
+version = "0.1.0"
+description = "Multi-agent orchestration demo using Microsoft Agent Framework"
+readme = "README.md"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 120
+select = ["E", "F", "W", "I", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.isort]
+known-first-party = ["agents", "app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true

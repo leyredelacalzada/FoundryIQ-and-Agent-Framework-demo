@@ -1,0 +1,46 @@
+# Orchestrator Agent Configuration
+
+name: orchestrator
+description: Routes requests to specialized agents based on the query content
+version: "1.0"
+
+# Model configuration
+model:
+  provider: azure_openai
+  deployment: ${AZURE_OPENAI_CHAT_DEPLOYMENT}
+  temperature: 0.1
+
+# Routing rules
+routing:
+  default_agent: hr_agent
+  rules:
+    - pattern: "hr|human resources|employee|benefits|vacation|leave|salary"
+      agent: hr_agent
+    - pattern: "it|technical|computer|software|hardware|network"
+      agent: it_agent
+    - pattern: "finance|budget|expense|invoice|payment"
+      agent: finance_agent
+
+# Available agents
+agents:
+  - id: hr_agent
+    name: HR Agent
+    endpoint: internal
+  - id: it_agent
+    name: IT Agent
+    endpoint: internal
+  - id: finance_agent
+    name: Finance Agent
+    endpoint: internal
+
+# System prompt
+system_prompt: |
+  You are an orchestrator agent that routes user queries to specialized agents.
+  Analyze the user's question and determine which agent is best suited to answer.
+  
+  Available agents:
+  - HR Agent: Human resources, employee benefits, policies, leave, compensation
+  - IT Agent: Technical support, software, hardware, network issues
+  - Finance Agent: Budget, expenses, invoices, payments, financial queries
+  
+  Route the query to the most appropriate agent based on the content.

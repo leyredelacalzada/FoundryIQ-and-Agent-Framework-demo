@@ -1,0 +1,16 @@
+# Development dependencies
+-r app/backend/requirements.txt
+
+# Testing
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.0.0
+httpx>=0.24.0
+
+# Linting and formatting
+ruff>=0.1.0
+black>=23.0.0
+
+# Type checking
+mypy>=1.0.0
+types-requests>=2.31.0

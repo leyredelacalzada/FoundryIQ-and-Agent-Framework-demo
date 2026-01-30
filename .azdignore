@@ -1,0 +1,50 @@
+# Exclude from azd deploy operations
+
+# Development and test artifacts
+tests/
+docs/
+evals/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+cov_annotate/
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Local development
+.venv/
+venv/
+node_modules/
+.env
+.env.local
+*.local
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Logs
+*.log
+logs/
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# OS files
+.DS_Store
+Thumbs.db

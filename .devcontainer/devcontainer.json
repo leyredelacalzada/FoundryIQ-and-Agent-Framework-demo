@@ -1,0 +1,35 @@
+{
+    "name": "FoundryIQ and Agent Framework Demo",
+    "image": "mcr.microsoft.com/devcontainers/python:3.13-bookworm",
+    "features": {
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "22",
+            "nodeGypDependencies": false
+        },
+        "ghcr.io/devcontainers/features/azure-cli:1.2.5": {},
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+        "ghcr.io/azure/azure-dev/azd:latest": {}
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-azuretools.azure-dev",
+                "ms-azuretools.vscode-bicep",
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "esbenp.prettier-vscode",
+                "DavidAnson.vscode-markdownlint",
+                "ms-azuretools.vscode-azure-github-copilot"
+            ]
+        }
+    },
+    "forwardPorts": [
+        8000,
+        5173
+    ],
+    "postCreateCommand": "pip install -r requirements-dev.txt && cd app/frontend && npm install",
+    "remoteUser": "vscode",
+    "hostRequirements": {
+        "memory": "8gb"
+    }
+}
