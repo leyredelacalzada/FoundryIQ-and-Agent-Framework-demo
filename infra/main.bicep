@@ -41,9 +41,6 @@ param embeddingModelVersion string = ''
 @description('Capacity of the embedding model deployment')
 param embeddingDeploymentCapacity int = 30
 
-@description('Dimensions of the embedding model')
-param embeddingModelDimensions int = 3072
-
 @description('Use Azure AI Foundry for agent framework')
 param useAIFoundry bool = true
 
@@ -72,7 +69,7 @@ module openAi 'core/ai/cognitiveservices.bicep' = {
   name: 'openai'
   scope: rg
   params: {
-    name: '${abbrs.cognitiveServicesAccounts}${resourceToken}'
+    name: '${abbrs.cog}${resourceToken}'
     location: openAiLocation
     tags: tags
     sku: {
@@ -113,13 +110,19 @@ module searchService 'core/search/search-services.bicep' = {
   name: 'search-service'
   scope: rg
   params: {
-    name: '${abbrs.searchSearchServices}${resourceToken}'
+    name: '${abbrs.srch}${resourceToken}'
     location: location
     tags: tags
     sku: {
-      name: 'basic'
+      name: 'standard'  // Required for FoundryIQ agentic retrieval
     }
-    semanticSearch: 'free'
+    semanticSearch: 'standard'  // Required for FoundryIQ Knowledge Bases
+    // Enable RBAC authentication (Both: API keys + RBAC)
+    authOptions: {
+      aadOrApiKey: {
+        aadAuthFailureMode: 'http401WithBearerChallenge'
+      }
+    }
   }
 }
 
@@ -128,7 +131,7 @@ module storage 'core/storage/storage-account.bicep' = {
   name: 'storage'
   scope: rg
   params: {
-    name: '${abbrs.storageStorageAccounts}${resourceToken}'
+    name: '${abbrs.st}${resourceToken}'
     location: location
     tags: tags
     containers: [
@@ -143,7 +146,7 @@ module containerAppsEnvironment 'core/host/container-apps-environment.bicep' = {
   name: 'container-apps-environment'
   scope: rg
   params: {
-    name: '${abbrs.appManagedEnvironments}${resourceToken}'
+    name: '${abbrs.cae}${resourceToken}'
     location: location
     tags: tags
   }
@@ -154,7 +157,7 @@ module containerRegistry 'core/host/container-registry.bicep' = {
   name: 'container-registry'
   scope: rg
   params: {
-    name: '${abbrs.containerRegistryRegistries}${resourceToken}'
+    name: '${abbrs.cr}${resourceToken}'
     location: location
     tags: tags
   }
@@ -165,7 +168,7 @@ module backend 'core/host/container-app.bicep' = {
   name: 'backend'
   scope: rg
   params: {
-    name: '${abbrs.appContainerApps}backend-${resourceToken}'
+    name: '${abbrs.ca}backend-${resourceToken}'
     location: location
     tags: union(tags, { 'azd-service-name': 'backend' })
     containerAppsEnvironmentName: containerAppsEnvironment.outputs.name
@@ -185,7 +188,7 @@ module backend 'core/host/container-app.bicep' = {
   }
 }
 
-// Role Assignments
+// Role Assignments - User Principal
 module openAiRoleUser 'core/security/role.bicep' = if (!empty(principalId)) {
   scope: rg
   name: 'openai-role-user'
@@ -196,12 +199,83 @@ module openAiRoleUser 'core/security/role.bicep' = if (!empty(principalId)) {
   }
 }
 
+module cognitiveServicesUserRole 'core/security/role.bicep' = if (!empty(principalId)) {
+  scope: rg
+  name: 'cognitive-services-user'
+  params: {
+    principalId: principalId
+    roleDefinitionId: 'a97b65f3-24c7-4388-baec-2e87135dc908' // Cognitive Services User
+    principalType: 'User'
+  }
+}
+
+module aiDeveloperRoleUser 'core/security/role.bicep' = if (!empty(principalId)) {
+  scope: rg
+  name: 'ai-developer-user'
+  params: {
+    principalId: principalId
+    roleDefinitionId: '64702f94-c441-49e6-a78b-ef80e0188fee' // Azure AI Developer
+    principalType: 'User'
+  }
+}
+
+module searchReaderRoleUser 'core/security/role.bicep' = if (!empty(principalId)) {
+  scope: rg
+  name: 'search-reader-user'
+  params: {
+    principalId: principalId
+    roleDefinitionId: '1407120a-92aa-4202-b7e9-c0e197c71c8f' // Search Index Data Reader
+    principalType: 'User'
+  }
+}
+
+module searchContributorRoleUser 'core/security/role.bicep' = if (!empty(principalId)) {
+  scope: rg
+  name: 'search-contributor-user'
+  params: {
+    principalId: principalId
+    roleDefinitionId: '8ebe5a00-799e-43f5-93ac-243d3dce84a7' // Search Index Data Contributor
+    principalType: 'User'
+  }
+}
+
+module searchServiceContributorUser 'core/security/role.bicep' = if (!empty(principalId)) {
+  scope: rg
+  name: 'search-service-contributor-user'
+  params: {
+    principalId: principalId
+    roleDefinitionId: '7ca78c08-252a-4471-8644-bb5ff32d4ba0' // Search Service Contributor
+    principalType: 'User'
+  }
+}
+
+module storageRoleUser 'core/security/role.bicep' = if (!empty(principalId)) {
+  scope: rg
+  name: 'storage-role-user'
+  params: {
+    principalId: principalId
+    roleDefinitionId: '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1' // Storage Blob Data Reader
+    principalType: 'User'
+  }
+}
+
+// Role Assignments - Backend Service Principal
 module openAiRoleBackend 'core/security/role.bicep' = {
   scope: rg
   name: 'openai-role-backend'
   params: {
     principalId: backend.outputs.identityPrincipalId
     roleDefinitionId: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd' // Cognitive Services OpenAI User
+    principalType: 'ServicePrincipal'
+  }
+}
+
+module aiDeveloperRoleBackend 'core/security/role.bicep' = {
+  scope: rg
+  name: 'ai-developer-backend'
+  params: {
+    principalId: backend.outputs.identityPrincipalId
+    roleDefinitionId: '64702f94-c441-49e6-a78b-ef80e0188fee' // Azure AI Developer
     principalType: 'ServicePrincipal'
   }
 }
@@ -216,11 +290,42 @@ module searchRoleBackend 'core/security/role.bicep' = {
   }
 }
 
+module searchContributorRoleBackend 'core/security/role.bicep' = {
+  scope: rg
+  name: 'search-contributor-backend'
+  params: {
+    principalId: backend.outputs.identityPrincipalId
+    roleDefinitionId: '8ebe5a00-799e-43f5-93ac-243d3dce84a7' // Search Index Data Contributor
+    principalType: 'ServicePrincipal'
+  }
+}
+
 module storageRoleBackend 'core/security/role.bicep' = {
   scope: rg
   name: 'storage-role-backend'
   params: {
     principalId: backend.outputs.identityPrincipalId
+    roleDefinitionId: '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1' // Storage Blob Data Reader
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Role Assignments - Search Service Managed Identity (for KB model access)
+module openAiRoleSearch 'core/security/role.bicep' = {
+  scope: rg
+  name: 'openai-role-search'
+  params: {
+    principalId: searchService.outputs.systemAssignedPrincipalId
+    roleDefinitionId: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd' // Cognitive Services OpenAI User
+    principalType: 'ServicePrincipal'
+  }
+}
+
+module storageRoleSearch 'core/security/role.bicep' = {
+  scope: rg
+  name: 'storage-role-search'
+  params: {
+    principalId: searchService.outputs.systemAssignedPrincipalId
     roleDefinitionId: '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1' // Storage Blob Data Reader
     principalType: 'ServicePrincipal'
   }

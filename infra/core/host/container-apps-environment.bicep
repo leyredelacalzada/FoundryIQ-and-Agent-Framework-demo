@@ -6,12 +6,12 @@ param daprEnabled bool = false
 param logAnalyticsWorkspaceName string = ''
 param applicationInsightsName string = ''
 
-param subnetResourceId string
+param subnetResourceId string = ''
 
-param usePrivateIngress bool = true
+param usePrivateIngress bool = false
 
 @allowed(['Consumption', 'D4', 'D8', 'D16', 'D32', 'E4', 'E8', 'E16', 'E32', 'NC24-A100', 'NC48-A100', 'NC96-A100'])
-param workloadProfile string
+param workloadProfile string = 'Consumption'
 
 // Make sure that we are using a non-consumption workload profile for private endpoints
 var finalWorkloadProfile = (usePrivateIngress && workloadProfile == 'Consumption') ? 'D4' : workloadProfile
@@ -24,17 +24,16 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2025-02-02-
   location: location
   tags: tags
   properties: {
-    // We can't use a conditional here due to an issue with the Container Apps ARM parsing
-    appLogsConfiguration: {
+    appLogsConfiguration: !empty(logAnalyticsWorkspaceName) ? {
       destination: 'log-analytics'
       logAnalyticsConfiguration: {
         customerId: logAnalyticsWorkspace!.properties.customerId
         sharedKey: logAnalyticsWorkspace!.listKeys().primarySharedKey
       }
-    }
+    } : null
     daprAIInstrumentationKey: daprEnabled && !empty(applicationInsightsName) ? applicationInsights!.properties.InstrumentationKey : ''
     publicNetworkAccess: usePrivateIngress ? 'Disabled' : 'Enabled'
-    vnetConfiguration: usePrivateIngress ? {
+    vnetConfiguration: usePrivateIngress && !empty(subnetResourceId) ? {
       infrastructureSubnetId: subnetResourceId
       internal: true
     } : null

@@ -1,159 +1,163 @@
 # FoundryIQ and Agent Framework Demo
 
-A multi-agent orchestration demo using Microsoft Agent Framework and Azure AI Foundry.
+A multi-agent orchestration demo using Microsoft Agent Framework SDK and Azure AI Foundry with FoundryIQ Knowledge Bases for grounded retrieval.
 
 ## Features
 
-- **Multi-Agent Orchestration**: Coordinate multiple specialized agents to handle complex tasks
-- **Microsoft Agent Framework**: Built on the official Microsoft agent framework SDK
-- **Azure AI Foundry Integration**: Leverage Azure AI services for agent capabilities
-- **Modular Agent Design**: Easy to add, remove, or modify agents
-- **Fully Automated Deployment**: One-command deployment with `azd up`
+- **Multi-Agent Orchestration**: Intelligent routing of queries to specialized agents (HR, Products, Marketing)
+- **Microsoft Agent Framework SDK**: Built on the official `agent-framework` Python SDK
+- **FoundryIQ Knowledge Bases**: Agentic retrieval mode with gpt-4.1 for grounded responses
+- **RBAC-Only Authentication**: No API keys - uses DefaultAzureCredential for all services
+- **Fully Automated Deployment**: Infrastructure as Code with Bicep + setup scripts
 
 ## Architecture
 
-![FoundryIQ + Agent Framework Architecture](docs/architecture.png)
-
-The architecture consists of the following components:
-
-- **Containers (Azure Container Apps)**: Hosts the Agent Framework for multi-agent orchestration
-- **Agent Service**: Contains the Orchestrator Agent and specialized domain agents
-  - **Orchestrator Agent**: Routes user questions to the appropriate specialized agent
-  - **HR Agent**: Handles HR-related queries using AI models and the HR Knowledge base
-  - **Products Agent**: Handles product-related queries with the Products Knowledge base
-  - **Marketing Agent**: Handles marketing-related queries with the Marketing Knowledge base
-  - **Other Agents**: Extensible architecture supports adding more specialized agents
-- **FoundryIQ Knowledge Bases**: Each agent connects to its own knowledge base that provides:
-  - **Indexed sources**: Azure AI Search, SharePoint, and other indexed data sources
-  - **Remote sources**: Bing, external APIs, and other remote data sources
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                              User Query                                       │
+│                    "What is the PTO policy?"                                  │
+└─────────────────────────────────┬────────────────────────────────────────────┘
+                                  │
+                                  ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                         ORCHESTRATOR AGENT                                    │
+│                                                                               │
+│   • Analyzes user intent                                                      │
+│   • Routes to appropriate specialist agent                                    │
+│   • Returns grounded response with citations                                  │
+└───────────┬─────────────────────┬─────────────────────┬──────────────────────┘
+            │                     │                     │
+            ▼                     ▼                     ▼
+┌───────────────────┐  ┌───────────────────┐  ┌───────────────────┐
+│    HR AGENT       │  │  MARKETING AGENT  │  │  PRODUCTS AGENT   │
+│                   │  │                   │  │                   │
+│ kb1-hr            │  │ kb2-marketing     │  │ kb3-products      │
+│ • PTO policies    │  │ • Campaigns       │  │ • Product catalog │
+│ • Benefits        │  │ • Brand guidelines│  │ • Specifications  │
+│ • Handbook        │  │ • Analytics       │  │ • Pricing         │
+└─────────┬─────────┘  └─────────┬─────────┘  └─────────┬─────────┘
+          │                      │                      │
+          ▼                      ▼                      ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    FOUNDRYIQ KNOWLEDGE BASES                                  │
+│                                                                               │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐                    │
+│  │   kb1-hr     │    │ kb2-marketing│    │ kb3-products │                    │
+│  │  gpt-4.1     │    │  gpt-4.1     │    │  gpt-4.1     │                    │
+│  └──────┬───────┘    └──────┬───────┘    └──────┬───────┘                    │
+│         ▼                   ▼                   ▼                            │
+│  ┌─────────────────────────────────────────────────────────────────────┐     │
+│  │                    KNOWLEDGE SOURCES                                 │     │
+│  │  HR:         ks-hr-sharepoint, ks-hr-aisearch, ks-hr-web            │     │
+│  │  Marketing:  ks-marketing, ks-blob-marketing, ks-marketing-web      │     │
+│  │  Products:   ks-products, ks-products-onelake                       │     │
+│  └──────────────────────────────────────────────────────────────────────┘     │
+└──────────────────────────────────────────────────────────────────────────────┘
+                                  │
+                                  ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                        AZURE AI SEARCH (Standard SKU)                         │
+│                         + Semantic Ranker (Standard)                          │
+│                                                                               │
+│  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐                  │
+│  │   index-hr     │  │ index-marketing│  │ index-products │                  │
+│  │   8 documents  │  │  8 documents   │  │   8 documents  │                  │
+│  └────────────────┘  └────────────────┘  └────────────────┘                  │
+│                                                                               │
+│  Auth: RBAC + API Keys (aadOrApiKey mode)                                    │
+└──────────────────────────────────────────────────────────────────────────────┘
+                                  │
+                                  ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                     AZURE AI FOUNDRY (Hub + Project)                          │
+│                                                                               │
+│  OpenAI Connection: AAD auth (disableLocalAuth: true)                        │
+│  Search Connection: RBAC (aadOrApiKey mode)                                  │
+│                                                                               │
+│  Model Deployments: gpt-4.1, gpt-4o, text-embedding-3-large                  │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
 
 ## Prerequisites
 
-- Azure subscription with permissions to create resources
+- Azure subscription with Owner or Contributor + User Access Administrator
+- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli)
 - [Azure Developer CLI (azd)](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd)
 - [Python 3.11+](https://www.python.org/downloads/)
-- [Node.js 20+](https://nodejs.org/)
-- [Docker](https://www.docker.com/products/docker-desktop/) (for local development)
 
 ## Quick Start
 
-### Using Dev Container (Recommended)
-
-1. Open in VS Code with Dev Containers extension
-2. Click "Reopen in Container" when prompted
-3. Configure and deploy:
+### 1. Clone and Setup
 
 ```bash
-# Login to Azure
-azd auth login
-
-# Configure environment
-azd env new myenv
-azd env set AZURE_LOCATION eastus
-azd env set AZURE_OPENAI_LOCATION eastus
-
-# Deploy
-azd up
-```
-
-### Manual Setup
-
-```bash
-# Clone the repository
 git clone https://github.com/your-org/FoundryIQ-and-Agent-Framework-demo.git
 cd FoundryIQ-and-Agent-Framework-demo
 
 # Create virtual environment
 python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+source .venv/bin/activate
 
 # Install dependencies
 pip install -r requirements-dev.txt
-cd app/frontend && npm install && cd ../..
+```
 
-# Login and deploy
-azd auth login
+### 2. Deploy Infrastructure
+
+```bash
+az login && azd auth login
 azd up
 ```
 
-## Configuration
-
-### Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `AZURE_LOCATION` | Azure region for resources | Required |
-| `AZURE_OPENAI_LOCATION` | Region for Azure OpenAI | Required |
-| `AZURE_USE_AUTHENTICATION` | Enable Entra authentication | `false` |
-| `USE_AGENTIC_KNOWLEDGEBASE` | Enable agentic retrieval | `true` |
-
-### Adding New Agents
-
-1. Create agent definition in `agents/` directory
-2. Register agent in the orchestrator configuration
-3. Add knowledge base configuration if needed
-4. Deploy with `azd deploy`
-
-## Development
-
-### Local Development
+### 3. Setup FoundryIQ Resources
 
 ```bash
-# Start backend
-cd app/backend
-python -m uvicorn main:app --reload --port 8000
-
-# Start frontend (in another terminal)
-cd app/frontend
-npm run dev
+./scripts/setup_indexes.sh
+./scripts/upload_sample_data.sh
+./scripts/setup_knowledge_sources.sh
+./scripts/setup_knowledge_bases.sh
 ```
 
-### Running Tests
+### 4. Configure Search RBAC (Manual)
+
+In Azure Portal: Search service → Keys → Set to **"Both"** (API keys + RBAC)
+
+### 5. Test the Orchestrator
 
 ```bash
-pytest tests/
+python app/backend/agents/orchestrator.py
 ```
 
-## Deployment
-
-### First Deployment
-
-```bash
-azd up
-```
-
-### Update Deployment
-
-```bash
-# Re-provision infrastructure only
-azd provision
-
-# Re-deploy application code only
-azd deploy
-```
+Try: "What is the PTO policy?" or "Tell me about the fitness watch"
 
 ## Project Structure
 
 ```
-├── .devcontainer/       # Dev container configuration
-├── agents/              # Agent definitions and configurations
-│   ├── hr_agent/        # HR specialized agent
-│   ├── products_agent/  # Products specialized agent
-│   ├── marketing_agent/ # Marketing specialized agent
-│   └── orchestrator/    # Main orchestrator agent
-├── app/
-│   ├── backend/         # Python backend (FastAPI/Quart)
-│   └── frontend/        # React frontend
-├── docs/                # Documentation
-├── infra/               # Bicep IaC templates
-├── scripts/             # Deployment and utility scripts
-└── tests/               # Test files
+├── app/backend/agents/
+│   ├── orchestrator.py      # Routes queries to specialists
+│   ├── hr_agent.py          # HR specialist → kb1-hr
+│   ├── products_agent.py    # Products specialist → kb3-products
+│   └── marketing_agent.py   # Marketing specialist → kb2-marketing
+├── infra/                   # Bicep IaC templates
+├── scripts/                 # Setup and deployment scripts
+└── docs/                    # Documentation
 ```
+
+## Knowledge Base Mapping
+
+| Agent | Knowledge Base | Content |
+|-------|----------------|---------|
+| HR | kb1-hr | PTO policies, benefits, handbook |
+| Products | kb3-products | Product catalog, specs, pricing |
+| Marketing | kb2-marketing | Campaigns, brand guidelines |
+
+## Troubleshooting
+
+| Issue | Fix |
+|-------|-----|
+| 403 Forbidden | Portal → Search → Keys → "Both" |
+| Generic responses | Ensure context_provider passed to ChatAgent |
+| KB errors | Run ./scripts/setup_rbac.sh |
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
+MIT License
