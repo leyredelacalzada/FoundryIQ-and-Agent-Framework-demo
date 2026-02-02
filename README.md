@@ -39,42 +39,22 @@ A multi-agent orchestration demo using Microsoft Agent Framework SDK and Azure A
           │                      │                      │
           ▼                      ▼                      ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                    FOUNDRYIQ KNOWLEDGE BASES                                  │
-│                                                                               │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐                    │
-│  │   kb1-hr     │    │ kb2-marketing│    │ kb3-products │                    │
-│  │  gpt-4.1     │    │  gpt-4.1     │    │  gpt-4.1     │                    │
-│  └──────┬───────┘    └──────┬───────┘    └──────┬───────┘                    │
-│         ▼                   ▼                   ▼                            │
-│  ┌─────────────────────────────────────────────────────────────────────┐     │
-│  │                    KNOWLEDGE SOURCES                                 │     │
-│  │  HR:         ks-hr-sharepoint, ks-hr-aisearch, ks-hr-web            │     │
-│  │  Marketing:  ks-marketing, ks-blob-marketing, ks-marketing-web      │     │
-│  │  Products:   ks-products, ks-products-onelake                       │     │
-│  └──────────────────────────────────────────────────────────────────────┘     │
-└──────────────────────────────────────────────────────────────────────────────┘
-                                  │
-                                  ▼
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                        AZURE AI SEARCH (Standard SKU)                         │
-│                         + Semantic Ranker (Standard)                          │
-│                                                                               │
-│  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐                  │
-│  │   index-hr     │  │ index-marketing│  │ index-products │                  │
-│  │   8 documents  │  │  8 documents   │  │   8 documents  │                  │
-│  └────────────────┘  └────────────────┘  └────────────────┘                  │
-│                                                                               │
-│  Auth: RBAC + API Keys (aadOrApiKey mode)                                    │
-└──────────────────────────────────────────────────────────────────────────────┘
-                                  │
-                                  ▼
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                     AZURE AI FOUNDRY (Hub + Project)                          │
-│                                                                               │
-│  OpenAI Connection: AAD auth (disableLocalAuth: true)                        │
-│  Search Connection: RBAC (aadOrApiKey mode)                                  │
-│                                                                               │
-│  Model Deployments: gpt-4.1, gpt-4o, text-embedding-3-large                  │
+│                         MICROSOFT FOUNDRY                                     │
+│  ┌────────────────────────────────────────────────────────────────────────┐  │
+│  │                    FOUNDRYIQ KNOWLEDGE BASES                            │  │
+│  │                                                                         │  │
+│  │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐              │  │
+│  │  │   kb1-hr     │    │ kb2-marketing│    │ kb3-products │              │  │
+│  │  │  gpt-4.1     │    │  gpt-4.1     │    │  gpt-4.1     │              │  │
+│  │  └──────┬───────┘    └──────┬───────┘    └──────┬───────┘              │  │
+│  │         ▼                   ▼                   ▼                      │  │
+│  │  ┌───────────────────────────────────────────────────────────────┐     │  │
+│  │  │                    KNOWLEDGE SOURCES                           │     │  │
+│  │  │  HR:         ks-hr-sharepoint, ks-hr-aisearch, ks-hr-web      │     │  │
+│  │  │  Marketing:  ks-marketing, ks-blob-marketing, ks-marketing-web│     │  │
+│  │  │  Products:   ks-products, ks-products-onelake                 │     │  │
+│  │  └───────────────────────────────────────────────────────────────┘     │  │
+│  └────────────────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
