@@ -2,9 +2,9 @@ import { useState } from "react";
 
 const formatMarkdown = (text: string): string => {
   return text
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g, "<em>$1</em>")
-    .replace(/\n/g, "<br />");
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/\n/g, '<br />');
 };
 
 interface SourceInfo {
@@ -22,16 +22,6 @@ interface Message {
 }
 
 type WorkflowStep = "idle" | "routing" | "hr" | "marketing" | "products" | "complete";
-
-// Strongly type the node IDs used in the canvas/status logic.
-type NodeId =
-  | "input"
-  | "orchestrator"
-  | "hr"
-  | "marketing"
-  | "products"
-  | "complete"
-  | "idle";
 
 interface TraceLog {
   timestamp: string;
@@ -64,8 +54,7 @@ const agents: AgentInfo[] = [
     id: "orchestrator",
     name: "Orchestrator",
     icon: "",
-    description:
-      "Routes user queries to the appropriate specialist agent based on intent analysis. Uses GPT-4.1 for intelligent routing decisions.",
+    description: "Routes user queries to the appropriate specialist agent based on intent analysis. Uses GPT-4.1 for intelligent routing decisions.",
     model: "gpt-4.1",
     connectedKB: null,
     knowledgeSources: [],
@@ -74,8 +63,7 @@ const agents: AgentInfo[] = [
     id: "hr",
     name: "HR Agent",
     icon: "",
-    description:
-      "Handles all HR-related queries including PTO policies, benefits, employee handbook, and company policies.",
+    description: "Handles all HR-related queries including PTO policies, benefits, employee handbook, and company policies.",
     model: "gpt-4.1",
     connectedKB: "kb1-hr",
     knowledgeSources: ["ks-hr-sharepoint", "ks-hr-aisearch", "ks-hr-web"],
@@ -84,8 +72,7 @@ const agents: AgentInfo[] = [
     id: "marketing",
     name: "Marketing Agent",
     icon: "",
-    description:
-      "Specializes in marketing inquiries including brand guidelines, campaign information, and competitor analysis.",
+    description: "Specializes in marketing inquiries including brand guidelines, campaign information, and competitor analysis.",
     model: "gpt-4.1",
     connectedKB: "kb2-marketing",
     knowledgeSources: ["ks-marketing", "ks-blob-marketing", "ks-marketing-web"],
@@ -94,8 +81,7 @@ const agents: AgentInfo[] = [
     id: "products",
     name: "Products Agent",
     icon: "",
-    description:
-      "Expert on product catalog, specifications, pricing, and feature information.",
+    description: "Expert on product catalog, specifications, pricing, and feature information.",
     model: "gpt-4.1",
     connectedKB: "kb3-products",
     knowledgeSources: ["ks-products", "ks-products-onelake"],
@@ -107,8 +93,7 @@ const knowledgeBases: KBInfo[] = [
     id: "kb1-hr",
     name: "HR Knowledge Base",
     icon: "",
-    description:
-      "Contains HR policies, employee handbook, PTO guidelines, benefits information, and company procedures.",
+    description: "Contains HR policies, employee handbook, PTO guidelines, benefits information, and company procedures.",
     retrievalMode: "Agentic Retrieval",
     model: "text-embedding-3-large",
     knowledgeSources: ["ks-hr-sharepoint", "ks-hr-aisearch", "ks-hr-web"],
@@ -117,8 +102,7 @@ const knowledgeBases: KBInfo[] = [
     id: "kb2-marketing",
     name: "Marketing Knowledge Base",
     icon: "",
-    description:
-      "Brand guidelines, marketing campaigns, customer segments, competitor analysis, and promotional materials.",
+    description: "Brand guidelines, marketing campaigns, customer segments, competitor analysis, and promotional materials.",
     retrievalMode: "Agentic Retrieval",
     model: "text-embedding-3-large",
     knowledgeSources: ["ks-marketing", "ks-blob-marketing", "ks-marketing-web"],
@@ -127,8 +111,7 @@ const knowledgeBases: KBInfo[] = [
     id: "kb3-products",
     name: "Products Knowledge Base",
     icon: "",
-    description:
-      "Complete product catalog with specifications, pricing, features, and inventory information.",
+    description: "Complete product catalog with specifications, pricing, features, and inventory information.",
     retrievalMode: "Agentic Retrieval",
     model: "text-embedding-3-large",
     knowledgeSources: ["ks-products", "ks-products-onelake"],
@@ -137,7 +120,7 @@ const knowledgeBases: KBInfo[] = [
 
 const sourceLogos: Record<string, string> = {
   "hr-agent": "👥",
-  "marketing-agent": "📣",
+  "marketing-agent": "📣", 
   "products-agent": "📦",
   "kb1-hr": "📋",
   "kb2-marketing": "🎨",
@@ -161,13 +144,7 @@ function App() {
   const [traceLogs, setTraceLogs] = useState<TraceLog[]>([]);
 
   const addLog = (type: TraceLog["type"], message: string) => {
-    // Removed fractionalSecondDigits for broader TS lib compatibility
-    const timestamp = new Date().toLocaleTimeString("en-US", {
-      hour12: false,
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
+    const timestamp = new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit", fractionalSecondDigits: 3 });
     setTraceLogs((prev) => [...prev, { timestamp, type, message }]);
   };
 
@@ -202,7 +179,7 @@ function App() {
     setInput("");
     setIsLoading(true);
     setWorkflowStep("routing");
-
+    
     addLog("info", `User query received: "${text}"`);
     addLog("route", "Orchestrator analyzing intent...");
 
@@ -213,34 +190,25 @@ function App() {
         body: JSON.stringify({ message: text }),
       });
       const data = await response.json();
-
+      
       // Set workflow step based on agent
       const agentType = data.agent?.replace("-agent", "") || "hr";
       setWorkflowStep(agentType as WorkflowStep);
       setActiveAgent(data.agent || null);
-
-      const kbMap: Record<string, string> = {
-        hr: "kb1-hr",
-        marketing: "kb2-marketing",
-        products: "kb3-products",
-      };
+      
+      const kbMap: Record<string, string> = { hr: "kb1-hr", marketing: "kb2-marketing", products: "kb3-products" };
       addLog("route", `Routed to ${data.agent || "specialist"}`);
-      addLog(
-        "query",
-        `${data.agent} querying ${kbMap[agentType]} via agentic retrieval...`
-      );
-
+      addLog("query", `${data.agent} querying ${kbMap[agentType]} via agentic retrieval...`);
+      
       // Log retrieved documents
       const sources = data.sources as SourceInfo[];
       if (sources && sources.length > 0) {
-        const docNames = sources
-          .map((s: SourceInfo) => s.title || s.filepath || "document")
-          .join(", ");
+        const docNames = sources.map((s: SourceInfo) => s.title || s.filepath || "document").join(", ");
         addLog("response", `Retrieved from ${kbMap[agentType]}: ${docNames}`);
       } else {
         addLog("response", `Retrieved documents from ${kbMap[agentType]}`);
       }
-
+      
       const assistantMessage: Message = {
         role: "assistant",
         content: data.message,
@@ -248,7 +216,7 @@ function App() {
         sources: data.sources,
       };
       setMessages((prev) => [...prev, assistantMessage]);
-
+      
       addLog("info", `Response generated (${data.message.length} chars)`);
       setTimeout(() => setWorkflowStep("complete"), 500);
     } catch (error) {
@@ -266,26 +234,14 @@ function App() {
     }
   };
 
-  // Strongly type the node parameter to avoid TS2367 with 'idle'
-  const getNodeStatus = (node: NodeId): "idle" | "active" | "complete" => {
+  const getNodeStatus = (node: string): "idle" | "active" | "complete" => {
     if (workflowStep === "idle") return "idle";
     if (workflowStep === "complete") return "complete";
-
-    // If we're not idle (handled above), the input node is complete
-    if (node === "input" ) return "complete";
-
-    // Orchestrator is active only during 'routing'
+    if (node === "input" && workflowStep !== "idle") return "complete";
     if (node === "orchestrator" && workflowStep === "routing") return "active";
-
-    // If we've moved past routing (and not idle/complete), orchestrator is complete
-    if (node === "orchestrator" && workflowStep !== "routing") return "complete";
-   
-    // The agent node matching the current step is active
+    if (node === "orchestrator" && workflowStep !== "routing" && workflowStep !== "idle") return "complete";
     if (node === workflowStep) return "active";
-
-    // All other nodes are idle
     return "idle";
-
   };
 
   return (
@@ -295,6 +251,7 @@ function App() {
           <div className="logo">
             <span className="logo-text">Zava</span>
           </div>
+          
         </div>
       </header>
 
@@ -335,21 +292,11 @@ function App() {
             <div className="details-panel">
               <div className="details-header">
                 <span className="details-title">{selectedAgent?.name || selectedKB?.name}</span>
-                <button
-                  className="details-close"
-                  onClick={() => {
-                    setSelectedAgent(null);
-                    setSelectedKB(null);
-                  }}
-                >
-                  ×
-                </button>
+                <button className="details-close" onClick={() => { setSelectedAgent(null); setSelectedKB(null); }}>×</button>
               </div>
               <div className="details-content">
-                <p className="details-description">
-                  {selectedAgent?.description || selectedKB?.description}
-                </p>
-
+                <p className="details-description">{selectedAgent?.description || selectedKB?.description}</p>
+                
                 <div className="details-section">
                   <span className="details-label">Model</span>
                   <span className="details-value">{selectedAgent?.model || selectedKB?.model}</span>
@@ -372,14 +319,10 @@ function App() {
                 <div className="details-section">
                   <span className="details-label">Knowledge Sources</span>
                   <div className="details-sources">
-                    {(selectedAgent?.knowledgeSources || selectedKB?.knowledgeSources || []).map(
-                      (ks) => (
-                        <span key={ks} className="details-source-tag">
-                          {ks}
-                        </span>
-                      )
-                    )}
-                    {selectedAgent?.knowledgeSources?.length === 0 && !selectedKB && (
+                    {(selectedAgent?.knowledgeSources || selectedKB?.knowledgeSources || []).map((ks) => (
+                      <span key={ks} className="details-source-tag">{ks}</span>
+                    ))}
+                    {(selectedAgent?.knowledgeSources?.length === 0 && !selectedKB) && (
                       <span className="details-value">None (routing only)</span>
                     )}
                   </div>
@@ -473,9 +416,7 @@ function App() {
             <div className="trace-header">
               <span className="trace-title">Execution Trace</span>
               {traceLogs.length > 0 && (
-                <button className="trace-clear" onClick={() => setTraceLogs([])}>
-                  Clear
-                </button>
+                <button className="trace-clear" onClick={() => setTraceLogs([])}>Clear</button>
               )}
             </div>
             <div className="trace-logs">
@@ -486,13 +427,7 @@ function App() {
                   <div key={i} className={`trace-log ${log.type}`}>
                     <span className="trace-time">{log.timestamp}</span>
                     <span className={`trace-type ${log.type}`}>
-                      {log.type === "info"
-                        ? "INFO"
-                        : log.type === "route"
-                        ? "ROUTE"
-                        : log.type === "query"
-                        ? "QUERY"
-                        : "RESP"}
+                      {log.type === "info" ? "INFO" : log.type === "route" ? "ROUTE" : log.type === "query" ? "QUERY" : "RESP"}
                     </span>
                     <span className="trace-msg">{log.message}</span>
                   </div>
@@ -540,10 +475,7 @@ function App() {
                     <span className="agent-name">{msg.agent}</span>
                   </div>
                 )}
-                <div
-                  className="message-content"
-                  dangerouslySetInnerHTML={{ __html: formatMarkdown(msg.content) }}
-                />
+                <div className="message-content" dangerouslySetInnerHTML={{ __html: formatMarkdown(msg.content) }} />
                 {msg.agent && (
                   <div className="message-sources">
                     <span className="source-label">Sources:</span>
@@ -557,11 +489,7 @@ function App() {
                         ))
                       ) : (
                         <span className="source-name">
-                          {msg.agent.replace("-agent", "") === "hr"
-                            ? "kb1-hr"
-                            : msg.agent.replace("-agent", "") === "marketing"
-                            ? "kb2-marketing"
-                            : "kb3-products"}
+                          {msg.agent.replace("-agent", "") === "hr" ? "kb1-hr" : msg.agent.replace("-agent", "") === "marketing" ? "kb2-marketing" : "kb3-products"}
                         </span>
                       )}
                     </div>
@@ -572,9 +500,7 @@ function App() {
             {isLoading && (
               <div className="message assistant loading">
                 <div className="loading-indicator">
-                  <span></span>
-                  <span></span>
-                  <span></span>
+                  <span></span><span></span><span></span>
                 </div>
                 <span className="loading-text">
                   {workflowStep === "routing" ? "Routing query..." : `${activeAgent} processing...`}
