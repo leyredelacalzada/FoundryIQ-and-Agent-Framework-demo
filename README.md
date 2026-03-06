@@ -137,7 +137,7 @@ Try: "What is the PTO policy?" or "Tell me about the fitness watch"
 | Issue | Fix |
 |-------|-----|
 | 403 Forbidden | Portal → Search → Keys → "Both" |
-| Generic responses | Ensure context_provider passed to ChatAgent |
+| Generic responses | Ensure context_provider passed to Agent |
 | KB errors | Run ./scripts/setup_rbac.sh |
 
 ## License

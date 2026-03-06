@@ -37,14 +37,14 @@ Response
 1. **Create agent file** in `app/backend/agents/`:
    ```python
    # new_agent.py
-   from agent_framework import ChatAgent, ChatMessage, Executor, WorkflowContext, handler
+   from agent_framework import Agent, ChatMessage, Executor, WorkflowContext, handler
    
    NEW_AGENT_INSTRUCTIONS = """Your instructions here..."""
    
    class NewAgentExecutor(Executor):
-       agent: ChatAgent
+       agent: Agent
        
-       def __init__(self, agent: ChatAgent, id: str = "new-agent"):
+       def __init__(self, agent: Agent, id: str = "new-agent"):
            self.agent = agent
            super().__init__(id=id)
        
